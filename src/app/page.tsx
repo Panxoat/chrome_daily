@@ -1,10 +1,13 @@
 "use client";
 import Image from "next/image";
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import unSplashURL from "@/api/axios";
+
+import Input from "../components/input";
+import Box from "../components/box";
 
 export default function Home() {
   const { data } = useQuery(
@@ -21,7 +24,7 @@ export default function Home() {
       return response.data;
     },
     {
-      staleTime: 600000,
+      staleTime: Infinity,
     }
   );
 
@@ -72,11 +75,31 @@ export default function Home() {
           </p>
         )}
         <section className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/20">
-          <h1 className="text-[60px] text-white font-medium">
-            What&#39;s up Today?
-          </h1>
+          <div className="flex flex-col items-center gap-y-[15px]">
+            <h1 className="text-[72px] text-white font-medium">
+              What&#39;s up Today?
+            </h1>
+            <Home.Action />
+          </div>
         </section>
       </article>
     </main>
   );
 }
+
+Home.Action = function Action() {
+  const [todoList, setTodoList] = useState<string[]>([]);
+
+  const onChagneTodoList = (value: string) => {
+    if (value) {
+      setTodoList((prevState) => [...prevState, value]);
+    }
+  };
+
+  return (
+    <>
+      <Input onChagneTodoList={onChagneTodoList} />
+      <Box todoList={todoList} />
+    </>
+  );
+};
