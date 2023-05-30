@@ -24,6 +24,7 @@ export default function Home() {
       return response.data;
     },
     {
+      // enabled: false,
       staleTime: Infinity,
     }
   );
