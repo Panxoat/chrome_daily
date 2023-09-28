@@ -77,7 +77,7 @@ export default function Home() {
         )}
         <section className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/20">
           <div className="flex flex-col items-center gap-y-[15px]">
-            <h1 className="text-[72px] text-white font-medium">
+            <h1 className="select-none text-[72px] text-white font-medium">
               What&#39;s up Today?
             </h1>
             <Home.Action />

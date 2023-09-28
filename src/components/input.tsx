@@ -17,8 +17,9 @@ const Input = ({ onChagneTodoList }: InputProps) => {
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            setTodo("");
-            onChagneTodoList(e.currentTarget.value);
+            // setTodo("");
+            console.log(todo);
+            onChagneTodoList(todo);
           }
         }}
         className="outline-none w-[200px] border-b border-[#ffffff] text-[32px] text-[#ffffff] text-center font-medium bg-transparent"

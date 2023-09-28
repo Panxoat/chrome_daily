@@ -13,16 +13,17 @@ interface IMovePointer {
 
 const localStorageKey = "todoStickyNotePointer";
 
+const boundaryMargin = 12;
+
+const inRange = (v: number, min: number, max: number) => {
+  if (v < min) return min;
+  if (v > max) return max;
+  return v;
+};
+
 const Box = ({ todoList }: BoxProps) => {
   const boxRef = useRef<HTMLDivElement | null>(null);
   const boxNavRef = useRef<HTMLDivElement | null>(null);
-
-  const [isMouseDown, setIsMouseDown] = useState(false);
-
-  const [shiftPointer, setShiftPointer] = useState({
-    x: 0,
-    y: 0,
-  });
 
   const cachedPointer = useLoadLocalStorage<IMovePointer>({
     key: localStorageKey,
@@ -31,67 +32,61 @@ const Box = ({ todoList }: BoxProps) => {
     y: 0,
   };
 
-  const [movePointer, setMovePointer] = useState<IMovePointer>({
+  const [{ x, y }, setPosition] = useState<IMovePointer>({
     x: cachedPointer.x,
     y: cachedPointer.y,
   });
 
   useSetLocalStorage({
     key: localStorageKey,
-    data: movePointer,
-    defaultData: movePointer,
+    data: { x, y },
+    defaultData: { x, y },
   });
-
-  const onPointerUp: React.PointerEventHandler<HTMLDivElement> = (e) => {
-    setIsMouseDown(false);
-  };
-
-  const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
-    setIsMouseDown(true);
-    if (boxRef.current) {
-      const { clientX, clientY } = e;
-      const { left, top } = boxRef.current?.getBoundingClientRect();
-
-      setShiftPointer({
-        x: clientX - left,
-        y: clientY - top,
-      });
-    }
-  };
-
-  const onPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
-    const { clientX, clientY } = e;
-
-    if (isMouseDown) {
-      setMovePointer({
-        x: clientX - shiftPointer.x,
-        y: clientY - shiftPointer.y,
-      });
-    }
-  };
 
   return (
     <>
       <div
         ref={boxRef}
         style={{
-          left: movePointer.x,
-          top: movePointer.y,
+          // transform: `translateX(${x}px) translateY(${y}px)`,
+          left: x,
+          top: y,
         }}
         className="absolute w-[300px] flex flex-col rounded"
       >
         <div
           ref={boxNavRef}
           role="nav"
-          className="cursor-move w-full h-[25px] flex items-center gap-x-[5px] px-[10px] bg-[#4a4a4a]"
-          onPointerUp={onPointerUp}
-          onPointerMove={onPointerMove}
-          onPointerDown={onPointerDown}
-        >
-          <div className="cursor-pointer w-[12px] h-[12px] rounded-full bg-[#FF605C]" />
-          <div className="cursor-pointer w-[12px] h-[12px] rounded-full bg-[#FFBD44]" />
-          <div className="cursor-pointer w-[12px] h-[12px] rounded-full bg-[#00CA4E]" />
-        </div>
+          className="cursor-move w-full h-[25px] flex items-center gap-x-[5px] px-[10px] bg-[#4a4a4a] rounded-t"
+          onMouseDown={(clickEvent: React.MouseEvent<Element, MouseEvent>) => {
+            const mouseMoveHandler = (moveEvent: MouseEvent) => {
+              const deltaX = moveEvent.screenX - clickEvent.screenX;
+              const deltaY = moveEvent.screenY - clickEvent.screenY;
+
+              setPosition({
+                x: inRange(
+                  x + deltaX,
+                  boundaryMargin,
+                  window.innerWidth - 300 - boundaryMargin
+                ),
+                y: inRange(
+                  y + deltaY,
+                  boundaryMargin,
+                  window.innerHeight - 325 - boundaryMargin
+                ),
+              });
+            };
+
+            const mouseUpHandler = () => {
+              document.removeEventListener("mousemove", mouseMoveHandler);
+            };
+
+            document.addEventListener("mousemove", mouseMoveHandler);
+            document.addEventListener("mouseup", mouseUpHandler, {
+              once: true,
+            });
+          }}
+        ></div>
         <div className="h-[300px] flex flex-col bg-[#f2f2f2] gap-y-[10px]">
           {todoList.length === 0 && (
             <div className="w-full h-full flex flex-col items-center justify-center">
