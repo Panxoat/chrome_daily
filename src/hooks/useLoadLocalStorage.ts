@@ -1,5 +1,4 @@
-import { useEffect, useMemo } from "react";
-
+"use client";
 interface UseLocalStorageProps {
   key: string;
 }
