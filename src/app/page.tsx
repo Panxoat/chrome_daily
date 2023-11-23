@@ -1,15 +1,22 @@
 "use client";
-import Image from "next/image";
+import Image, { ImageLoaderProps } from "next/image";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import unSplashURL from "@/api/axios";
 
+import { dynamicBlurDataUrl } from "@/hooks/useDynamicBlurDataUrl";
+
 import Input from "../components/input";
-import Box from "../components/box";
+
+const imageLoader = ({ src, width, quality }: ImageLoaderProps) => {
+  return src;
+};
 
 export default function Home() {
+  const [blurUrl, setBlurUrl] = useState("");
+
   const { data } = useQuery(
     ["get_unsplash_images"],
     async () => {
@@ -29,6 +36,17 @@ export default function Home() {
     }
   );
 
+  useEffect(() => {
+    const init = async () => {
+      const blur = await dynamicBlurDataUrl(data?.urls?.raw);
+      setBlurUrl(blur);
+    };
+
+    if (data) {
+      init();
+    }
+  }, [data]);
+
   const photographerInfo = useMemo(() => {
     if (data) {
       return {
@@ -41,18 +59,30 @@ export default function Home() {
 
   const images = useMemo(() => {
     if (data) {
-      return data?.urls?.raw;
+      return {
+        url: data?.urls?.raw,
+        blur: data?.blur_hash,
+      };
     }
   }, [data]);
 
   return (
     <main>
-      <article
-        style={{
-          backgroundImage: `url(${images})`,
-        }}
-        className="relative w-screen h-screen bg-no-repeat bg-cover"
-      >
+      <article className="relative w-screen h-screen bg-no-repeat bg-cover">
+        {blurUrl && (
+          <Image
+            fill
+            unoptimized
+            placeholder="blur"
+            loader={imageLoader}
+            src={images?.url}
+            blurDataURL={blurUrl}
+            style={{
+              objectFit: "cover",
+            }}
+            alt="Picture of the background"
+          />
+        )}
         {photographerInfo && (
           <p
             style={{ transform: "translate(-50%)" }}
@@ -100,7 +130,6 @@ Home.Action = function Action() {
   return (
     <>
       <Input onChagneTodoList={onChagneTodoList} />
-      <Box todoList={todoList} />
     </>
   );
 };
